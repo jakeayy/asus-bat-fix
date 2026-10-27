@@ -26,7 +26,23 @@ away while the charger is plugged in.
 
 ## Are you affected?
 
-Unplug the charger and run:
+Clone the repository and run the test script, then unplug the charger when it
+asks you to:
+
+```sh
+git clone https://github.com/jakeayy/asus-bat-fix.git
+cd asus-bat-fix
+./test.sh
+```
+
+It finds the charger and battery, takes readings for 30 seconds
+(`./test.sh 60` for longer), and tells you whether the bug showed up. It doesn't
+need root. Run it again after installing to check that the fix works.
+
+<details>
+<summary>Checking by hand</summary>
+
+With the charger unplugged, run:
 
 ```sh
 while true; do
@@ -37,7 +53,9 @@ done
 
 If you see `AC=0` together with `BAT=Not charging`, this module will help. If
 your charger isn't called `ADP0`, look in `/sys/class/power_supply/` for the
-entry whose `type` is `Mains`. See [Other models](#other-models).
+entry whose `type` is `Mains`.
+
+</details>
 
 ## How it works
 
@@ -88,18 +106,35 @@ sudo dmesg | grep asus_bat_fix
 ```
 
 You should see `asus_bat_fix: loaded, AC adapter ADP0 is online` (or
-`offline`). Unplug the charger and run the loop from
-[Are you affected?](#are-you-affected) again. The status should stay on
-`Discharging`.
+`offline`). Run `./test.sh` again with the charger unplugged. It should report
+that the module is working.
 
 To unload it: `sudo rmmod asus_bat_fix`
 
 ## Install permanently with DKMS
 
 DKMS rebuilds the module automatically every time you install a new kernel.
+From the repository directory, run:
 
 ```sh
-git clone https://github.com/jakeayy/asus-bat-fix.git
+sudo ./system_install.sh
+```
+
+The script:
+
+- checks for `dkms`, `make`, `gcc` and kernel headers, and prints the command
+  to install any that are missing for your distribution
+- finds your charger's name and configures the module for it. Use
+  `--ac-name NAME` to set it yourself.
+- installs the module with DKMS, sets it to load at every boot, and loads it now
+- tells you what to do if Secure Boot blocks the module
+
+Running it again reinstalls cleanly, for example after `git pull` to upgrade.
+
+<details>
+<summary>Installing by hand</summary>
+
+```sh
 sudo cp -r asus-bat-fix /usr/src/asus-bat-fix-1.0
 sudo dkms install asus-bat-fix/1.0
 
@@ -112,20 +147,33 @@ On Fedora, also make sure the DKMS boot service is enabled:
 `sudo systemctl enable dkms`. It rebuilds the module at boot if that didn't
 happen during the kernel update.
 
+</details>
+
 To check it:
 
 ```sh
-dkms status                 # asus-bat-fix/1.0, <kernel>, x86_64: installed
+dkms status -m asus-bat-fix   # asus-bat-fix/1.0, <kernel>, x86_64: installed
 lsmod | grep asus_bat_fix
+./test.sh                     # with the charger unplugged
 ```
 
 ## Uninstall
 
 ```sh
+sudo ./system_install.sh --uninstall
+```
+
+<details>
+<summary>Uninstalling by hand</summary>
+
+```sh
 sudo rmmod asus_bat_fix
 sudo dkms remove asus-bat-fix/1.0 --all
 sudo rm -r /usr/src/asus-bat-fix-1.0 /etc/modules-load.d/asus-bat-fix.conf
+sudo rm -f /etc/modprobe.d/asus-bat-fix.conf
 ```
+
+</details>
 
 ## Other models
 
@@ -133,7 +181,8 @@ The module isn't tied to the M1607KA. It only acts when the battery reports
 `Not charging` while the charger is offline. It should therefore be harmless on
 other laptops, and may help other ASUS models with the same firmware bug.
 
-If your charger has a different name, pass it as a parameter:
+`system_install.sh` detects the charger's name automatically. If you load the
+module by hand and your charger has a different name, pass it as a parameter:
 
 ```sh
 sudo insmod asus_bat_fix.ko ac_name=AC0
