@@ -156,8 +156,23 @@ options asus_bat_fix ac_name=AC0
   upstream kernel quirk for this model. Once either exists, uninstall this
   module.
 
-Tested on: ASUS Vivobook 16 M1607KA, BIOS M1607KA.331, Fedora 45, kernel
-7.2.11.
+## Tested on
+
+| Model | BIOS | Distro / kernel | Result |
+| --- | --- | --- | --- |
+| ASUS Vivobook 16 M1607KA | M1607KA.331 | Fedora 45, 7.2.11 | Works |
+| ASUS Vivobook S 14 M3407HA | — | — | Works |
+
+Tried it on another laptop? Please
+[open an issue](https://github.com/jakeayy/asus-bat-fix/issues) and include:
+
+- The model, from `cat /sys/class/dmi/id/product_name`
+- The BIOS version, from `cat /sys/class/dmi/id/bios_version`
+- Your distribution and kernel version, from `uname -r`
+- Whether the module fixed the problem, or whether the laptop didn't have the
+  bug in the first place
+
+Reports from laptops where it didn't help are useful too.
 
 ## License
 
