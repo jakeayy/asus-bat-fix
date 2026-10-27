@@ -161,4 +161,4 @@ Tested on: ASUS Vivobook 16 M1607KA, BIOS M1607KA.331, Fedora 45, kernel
 
 ## License
 
-GPL-2.0. See the SPDX header in `asus_bat_fix.c`.
+GPL-2.0. See [LICENSE](LICENSE).
