@@ -161,7 +161,7 @@ options asus_bat_fix ac_name=AC0
 | Model | BIOS | Distro / kernel | Result |
 | --- | --- | --- | --- |
 | ASUS Vivobook 16 M1607KA | M1607KA.331 | Fedora 45, 7.2.11 | Works |
-| ASUS Vivobook S 14 M3407HA | — | — | Works |
+| ASUS Vivobook S 14 M3407HA | M3407HA.312 | Arch Linux, 7.2.11 | Works |
 
 Tried it on another laptop? Please
 [open an issue](https://github.com/jakeayy/asus-bat-fix/issues) and include:
