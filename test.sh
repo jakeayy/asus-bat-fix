@@ -32,9 +32,14 @@ if [[ -z $ac || -z $bat ]]; then
 fi
 
 loaded=false
-[[ -d /sys/module/asus_bat_fix ]] && loaded=true
+modver=
+if [[ -d /sys/module/asus_bat_fix ]]; then
+	loaded=true
+	# Version 1.0 didn't set MODULE_VERSION, so it has no version file.
+	modver=$(cat /sys/module/asus_bat_fix/version 2>/dev/null) || modver=
+fi
 
-echo "Battery: $bat, charger: $ac, asus_bat_fix loaded: $loaded"
+echo "Battery: $bat, charger: $ac, asus_bat_fix loaded: $loaded${modver:+ (version $modver)}"
 echo "Unplug the charger now. Sampling every 0.5 s for $duration s..."
 
 total=0
@@ -65,7 +70,11 @@ fi
 
 echo "$on_battery of $total readings were taken on battery; $bad said \"Not charging\" or \"Full\"."
 if (( bad > 0 )); then
-	if $loaded; then
+	if $loaded && [[ -z $modver ]]; then
+		echo "Bug present, but the loaded asus_bat_fix is older than 1.1, which added"
+		echo "the fix for \"Full\" at 100%. Update it with: git pull && sudo ./system_install.sh"
+		echo "Then run this test again."
+	elif $loaded; then
 		echo "Bug present even though asus_bat_fix is loaded. Please open an issue."
 	else
 		echo "Affected: this laptop has the bug, and asus_bat_fix should fix it."

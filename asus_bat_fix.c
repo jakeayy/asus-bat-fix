@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Workaround for ASUS Vivobook 16 M1607KA battery firmware: while running on
- * battery, _BST sometimes reports neither "charging" nor "discharging", so the
- * ACPI battery driver reports POWER_SUPPLY_STATUS_NOT_CHARGING about every
- * other second. Userspace (upower) shows that as the charger being connected.
+ * Workaround for ASUS Vivobook battery firmware (first seen on the M1607KA):
+ * while running on battery, _BST sometimes reports neither "charging" nor
+ * "discharging", so the ACPI battery driver reports
+ * POWER_SUPPLY_STATUS_NOT_CHARGING about every other second. At 100% charge
+ * the same empty state makes the driver report POWER_SUPPLY_STATUS_FULL
+ * instead. Userspace (upower) shows these as the charger being connected or
+ * the battery being full.
  *
  * This module hooks acpi_battery_get_property() with a kretprobe and rewrites
  * NOT_CHARGING or FULL to DISCHARGING whenever the AC adapter is offline.
@@ -141,4 +144,5 @@ module_init(asus_bat_fix_init);
 module_exit(asus_bat_fix_exit);
 
 MODULE_LICENSE("GPL");
+MODULE_VERSION("1.1");
 MODULE_DESCRIPTION("Report Discharging instead of stale battery statuses on ASUS Vivobooks");

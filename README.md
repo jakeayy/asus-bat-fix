@@ -64,8 +64,9 @@ look in `/sys/class/power_supply/` for the entry whose `type` is `Mains`.
 
 The module hooks the kernel's ACPI battery driver (`acpi_battery_get_property`)
 using a kretprobe. When the driver returns `Not charging` or `Full` while the
-charger is offline, the module changes the value to `Discharging`. Everything that reads the
-battery status sees the corrected value: sysfs, uevents, upower and the desktop.
+charger is offline, the module changes the value to `Discharging`. Everything
+that reads the battery status sees the corrected value: sysfs, uevents, upower
+and the desktop.
 
 - While the charger is plugged in, the module changes nothing. A real
   `Not charging` or `Full` status is still reported.
@@ -138,8 +139,8 @@ Running it again reinstalls cleanly, for example after `git pull` to upgrade.
 <summary>Installing by hand</summary>
 
 ```sh
-sudo cp -r asus-bat-fix /usr/src/asus-bat-fix-1.0
-sudo dkms install asus-bat-fix/1.0
+sudo cp -r asus-bat-fix /usr/src/asus-bat-fix-1.1
+sudo dkms install asus-bat-fix/1.1
 
 # Load it at every boot, and load it now
 echo asus_bat_fix | sudo tee /etc/modules-load.d/asus-bat-fix.conf
@@ -155,7 +156,7 @@ happen during the kernel update.
 To check it:
 
 ```sh
-dkms status -m asus-bat-fix   # asus-bat-fix/1.0, <kernel>, x86_64: installed
+dkms status -m asus-bat-fix   # asus-bat-fix/1.1, <kernel>, x86_64: installed
 lsmod | grep asus_bat_fix
 ./test.sh                     # with the charger unplugged
 ```
@@ -169,10 +170,12 @@ sudo ./system_install.sh --uninstall
 <details>
 <summary>Uninstalling by hand</summary>
 
+Replace `1.1` with the version that `dkms status -m asus-bat-fix` shows.
+
 ```sh
 sudo rmmod asus_bat_fix
-sudo dkms remove asus-bat-fix/1.0 --all
-sudo rm -r /usr/src/asus-bat-fix-1.0 /etc/modules-load.d/asus-bat-fix.conf
+sudo dkms remove asus-bat-fix/1.1 --all
+sudo rm -r /usr/src/asus-bat-fix-1.1 /etc/modules-load.d/asus-bat-fix.conf
 sudo rm -f /etc/modprobe.d/asus-bat-fix.conf
 ```
 
@@ -207,7 +210,9 @@ options asus_bat_fix ac_name=AC0
   marked as modified.
 - This is a workaround. The proper fix is a BIOS update from ASUS or an
   upstream kernel quirk for this model. Once either exists, uninstall this
-  module.
+  module. Upstream reports:
+  [kernel bug 222304](https://bugzilla.kernel.org/show_bug.cgi?id=222304) and
+  [UPower #370](https://gitlab.freedesktop.org/upower/upower/-/work_items/370).
 
 ## Tested on
 
@@ -215,6 +220,7 @@ options asus_bat_fix ac_name=AC0
 | --- | --- | --- | --- |
 | ASUS Vivobook 16 M1607KA | M1607KA.331 | Fedora 45, 7.2.11 | Works |
 | ASUS Vivobook S 14 M3407HA | M3407HA.312 | Arch Linux, 7.2.11 | Works |
+| ASUS Vivobook 14 M1407KA | M1407KA.332 | Ubuntu 26.10, 7.3.0-11-generic | Works, including `Full` at 100% |
 
 Tried it on another laptop? Please
 [open an issue](https://github.com/jakeayy/asus-bat-fix/issues) and include:
