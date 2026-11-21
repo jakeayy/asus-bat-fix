@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Check whether this laptop reports "Not charging" while running on battery,
-# the firmware bug that asus_bat_fix works around. No root needed.
+# Check whether this laptop reports "Not charging" or "Full" while running
+# on battery, the firmware bug that asus_bat_fix works around. No root needed.
 #
 # Usage: ./test.sh [seconds]   (default: 30)
 #
@@ -47,7 +47,7 @@ while (( SECONDS < end )); do
 	total=$((total + 1))
 	if [[ $online == 0 ]]; then
 		on_battery=$((on_battery + 1))
-		[[ $status == "Not charging" ]] && bad=$((bad + 1))
+		[[ $status == "Not charging" || $status == "Full" ]] && bad=$((bad + 1))
 	fi
 	if [[ -t 1 ]]; then
 		printf '\r  %3d s left   charger online: %s   battery: %-13s' \
@@ -63,7 +63,7 @@ if (( on_battery == 0 )); then
 	exit 3
 fi
 
-echo "$on_battery of $total readings were taken on battery; $bad of them said \"Not charging\"."
+echo "$on_battery of $total readings were taken on battery; $bad said \"Not charging\" or \"Full\"."
 if (( bad > 0 )); then
 	if $loaded; then
 		echo "Bug present even though asus_bat_fix is loaded. Please open an issue."
@@ -74,7 +74,7 @@ if (( bad > 0 )); then
 fi
 
 if $loaded; then
-	echo "No \"Not charging\" readings on battery: asus_bat_fix is working."
+	echo "No \"Not charging\" or \"Full\" readings on battery: asus_bat_fix is working."
 else
 	echo "No sign of the bug during this test, so this laptop probably doesn't need asus_bat_fix."
 fi

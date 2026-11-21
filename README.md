@@ -1,8 +1,7 @@
 # asus-bat-fix
 
-A small Linux kernel module that fixes the battery status flickering between
-**charging** and **discharging** on the ASUS Vivobook 16 M1607KA when the
-charger is **unplugged**.
+A small Linux kernel module that fixes battery status flickering on ASUS
+Vivobook laptops when the charger is **unplugged**.
 
 ## The problem
 
@@ -18,11 +17,15 @@ AC=0  BAT=Discharging
 AC=0  BAT=Not charging
 ```
 
-upower reports `Not charging` as `pending-charge`. GNOME and other desktops
-then show a charging icon, so the battery looks as if the charger were being
-plugged in and out. Nothing is actually connecting, the charger stays offline,
-and the battery keeps draining normally. It's purely a display bug, and it goes
-away while the charger is plugged in.
+At 100% charge, some affected firmware also alternates between `Full` and
+`Discharging` while the charger is unplugged. Both `Not charging` and `Full`
+can make userspace show a state that does not match the laptop running on
+battery.
+
+upower reports `Not charging` as `pending-charge` and `Full` as `fully-charged`.
+GNOME and other desktops then show a charging or full battery icon while the
+charger stays offline and the battery keeps draining normally. It's a display
+bug, and it goes away while the charger is plugged in.
 
 ## Are you affected?
 
@@ -51,21 +54,21 @@ while true; do
 done
 ```
 
-If you see `AC=0` together with `BAT=Not charging`, this module will help. If
-your charger isn't called `ADP0`, look in `/sys/class/power_supply/` for the
-entry whose `type` is `Mains`.
+If you see `AC=0` together with `BAT=Not charging` or `BAT=Full` alternating
+with `Discharging`, this module may help. If your charger isn't called `ADP0`,
+look in `/sys/class/power_supply/` for the entry whose `type` is `Mains`.
 
 </details>
 
 ## How it works
 
 The module hooks the kernel's ACPI battery driver (`acpi_battery_get_property`)
-using a kretprobe. When the driver returns `Not charging` while the charger is
-offline, the module changes the value to `Discharging`. Everything that reads the
+using a kretprobe. When the driver returns `Not charging` or `Full` while the
+charger is offline, the module changes the value to `Discharging`. Everything that reads the
 battery status sees the corrected value: sysfs, uevents, upower and the desktop.
 
 - While the charger is plugged in, the module changes nothing. A real
-  `Not charging` (for example, when a charge limit is reached) is still reported.
+  `Not charging` or `Full` status is still reported.
 - The probe never asks the firmware for the charger state, because that can
   sleep, which isn't allowed inside a probe. Instead, it keeps a cached copy of
   the charger state and updates it whenever the charger reports a change.
@@ -178,8 +181,9 @@ sudo rm -f /etc/modprobe.d/asus-bat-fix.conf
 ## Other models
 
 The module isn't tied to the M1607KA. It only acts when the battery reports
-`Not charging` while the charger is offline. It should therefore be harmless on
-other laptops, and may help other ASUS models with the same firmware bug.
+`Not charging` or `Full` while the charger is offline. It should therefore be
+harmless on other laptops, and may help other ASUS models with the same firmware
+bug.
 
 `system_install.sh` detects the charger's name automatically. If you load the
 module by hand and your charger has a different name, pass it as a parameter:

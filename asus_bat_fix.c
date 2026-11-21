@@ -6,7 +6,7 @@
  * other second. Userspace (upower) shows that as the charger being connected.
  *
  * This module hooks acpi_battery_get_property() with a kretprobe and rewrites
- * NOT_CHARGING to DISCHARGING whenever the AC adapter is offline.
+ * NOT_CHARGING or FULL to DISCHARGING whenever the AC adapter is offline.
  *
  * The probe handler runs in atomic context and must not sleep, but reading
  * the AC adapter state evaluates ACPI methods (which can sleep). So the AC
@@ -77,7 +77,8 @@ static int get_property_ret(struct kretprobe_instance *ri, struct pt_regs *regs)
 
 	if (regs_return_value(regs) != 0)
 		return 0;
-	if (d->val->intval == POWER_SUPPLY_STATUS_NOT_CHARGING && !READ_ONCE(ac_online)) {
+	if ((d->val->intval == POWER_SUPPLY_STATUS_NOT_CHARGING ||
+	     d->val->intval == POWER_SUPPLY_STATUS_FULL) && !READ_ONCE(ac_online)) {
 		d->val->intval = POWER_SUPPLY_STATUS_DISCHARGING;
 		fixed_count++;
 	}
@@ -140,4 +141,4 @@ module_init(asus_bat_fix_init);
 module_exit(asus_bat_fix_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Report Discharging instead of Not charging on battery (ASUS M1607KA _BST quirk)");
+MODULE_DESCRIPTION("Report Discharging instead of stale battery statuses on ASUS Vivobooks");
