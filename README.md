@@ -72,7 +72,8 @@ and the desktop.
   `Not charging` or `Full` status is still reported.
 - The probe never asks the firmware for the charger state, because that can
   sleep, which isn't allowed inside a probe. Instead, it keeps a cached copy of
-  the charger state and updates it whenever the charger reports a change.
+  the charger state, updates it when the charger reports a change, and polls
+  once a second in case a notification is missed.
 
 ## Requirements
 
